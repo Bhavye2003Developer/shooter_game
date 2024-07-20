@@ -4,7 +4,26 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
   const [canvasPos, setCanvasPos] = useState<number[]>([]);
-  const [players, setPlayers] = useState({
+
+  type playersType = {
+    [id: string]: {
+      color: string;
+      x: number;
+      y: number;
+      radius: number;
+    };
+  };
+
+  type playersBoundariesType = {
+    [id: string]: {
+      x: number;
+      y: number;
+      radius: number;
+      isVisible: boolean;
+    };
+  };
+
+  const [players, setPlayers] = useState<playersType>({
     1: {
       color: "pink",
       x: 300,
@@ -18,25 +37,26 @@ function App() {
       radius: 20,
     },
   });
-  const [playersBoundaries, setPlayersBoundaries] = useState({
-    1: {
-      x: 300,
-      y: 300,
-      radius: 80,
-      isVisible: false,
-    },
-    2: {
-      x: 900,
-      y: 300,
-      radius: 80,
-      isVisible: false,
-    },
-  });
+  const [playersBoundaries, setPlayersBoundaries] =
+    useState<playersBoundariesType>({
+      1: {
+        x: 300,
+        y: 300,
+        radius: 80,
+        isVisible: false,
+      },
+      2: {
+        x: 900,
+        y: 300,
+        radius: 80,
+        isVisible: false,
+      },
+    });
 
   interface curPlayerInfoType {
-    id: null | number;
-    x: null | number;
-    y: null | number;
+    id: number;
+    x: number;
+    y: number;
   }
   const curPlayerInfo = useRef<curPlayerInfoType>({
     id: 1,
@@ -56,31 +76,35 @@ function App() {
 
   useEffect(() => {
     clearBoard();
-    for (let playerId of Object.keys(players)) {
-      ctx.current?.beginPath();
-      ctx.current?.arc(
-        players[playerId].x,
-        players[playerId].y,
-        players[playerId].radius,
-        0,
-        Math.PI * 2,
-        true
-      );
-      ctx.current?.stroke();
-    }
+    if (ctx.current) {
+      ctx.current.strokeStyle = "black";
+      for (let playerId of Object.keys(players)) {
+        ctx.current?.beginPath();
+        ctx.current?.arc(
+          players[playerId].x,
+          players[playerId].y,
+          players[playerId].radius,
+          0,
+          Math.PI * 2,
+          true
+        );
+        ctx.current?.stroke();
+      }
 
-    Object.keys(playersBoundaries).forEach((playerId) => {
-      ctx.current?.beginPath();
-      ctx.current?.arc(
-        playersBoundaries[playerId].x,
-        playersBoundaries[playerId].y,
-        playersBoundaries[playerId].radius,
-        0,
-        Math.PI * 2,
-        true
-      );
-      ctx.current?.stroke();
-    });
+      ctx.current.strokeStyle = "red";
+      Object.keys(playersBoundaries).forEach((playerId) => {
+        ctx.current?.beginPath();
+        ctx.current?.arc(
+          playersBoundaries[playerId].x,
+          playersBoundaries[playerId].y,
+          playersBoundaries[playerId].radius,
+          0,
+          Math.PI * 2,
+          true
+        );
+        ctx.current?.stroke();
+      });
+    }
   }, [players]);
 
   function clearBoard() {
@@ -114,9 +138,6 @@ function App() {
             console.log(mouseX, mouseY, mousePosX, mousePosY);
 
             const tmpPlayers = { ...players };
-
-            const tmpX = tmpPlayers[activePlayerId.current].x;
-            const tmpY = tmpPlayers[activePlayerId.current].y;
 
             const playerCornerCoordinateX = mousePosX;
             const playerCornerCoordinateY = mousePosY;
