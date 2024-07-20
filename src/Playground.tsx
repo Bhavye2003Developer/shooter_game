@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Phaser from "phaser";
-import { playersType } from "./types";
+import { playersBoundariesType, playersType } from "./types";
 
 export default function Playground() {
   const [players, setPlayers] = useState<playersType>({
@@ -11,6 +11,17 @@ export default function Playground() {
       color: 0xff0000,
     },
   });
+
+  const [playersBoundaries, setPlayersBoundaries] =
+    useState<playersBoundariesType>({
+      player1: {
+        x: 400,
+        y: 300,
+        radius: 75,
+        color: 0xff0000,
+        isVisible: false,
+      },
+    });
 
   useEffect(() => {
     console.log("changing: ", players);
@@ -39,7 +50,7 @@ export default function Playground() {
           .setInteractive();
 
         this.input.setDraggable(playerIcon);
-        console.log("circle", playerIcon);
+        // console.log("circle", playerIcon);
 
         this.input.on(
           "drag",
@@ -49,18 +60,52 @@ export default function Playground() {
             dragX: number,
             dragY: number
           ) => {
-            playerIcon.x = dragX;
-            playerIcon.y = dragY;
-            const tmpPlayers = { ...players };
-            tmpPlayers[gameObject.name].x = dragX;
-            tmpPlayers[gameObject.name].y = dragY;
-            setPlayers(tmpPlayers);
+            const distanceFromPointOrigin =
+              Math.sqrt(
+                Math.pow(dragX - playersBoundaries[playerId].x, 2) +
+                  Math.pow(dragY - playersBoundaries[playerId].y, 2)
+              ) + players[playerId].radius;
+
+            if (distanceFromPointOrigin <= playersBoundaries[playerId].radius) {
+              playerIcon.x = dragX;
+              playerIcon.y = dragY;
+
+              console.log("gameobj name: ", gameObject.name);
+
+              const tmpPlayers = { ...players };
+              if (tmpPlayers[gameObject.name]) {
+                tmpPlayers[gameObject.name].x = dragX;
+                tmpPlayers[gameObject.name].y = dragY;
+
+                const tmpPlayersBoundaries = { ...playersBoundaries };
+                tmpPlayersBoundaries[gameObject.name].x = dragX;
+                tmpPlayersBoundaries[gameObject.name].y = dragY;
+
+                setPlayers(tmpPlayers);
+                setPlayersBoundaries(tmpPlayersBoundaries);
+              }
+            }
           }
         );
 
         playerIcon.addListener("pointerdown", () => {
           console.log("circle clicked: ", playerIcon.name);
         });
+      }
+
+      for (let playerId of Object.keys(playersBoundaries)) {
+        const playerBoundary = this.add
+          .circle(
+            playersBoundaries[playerId].x,
+            playersBoundaries[playerId].y,
+            playersBoundaries[playerId].radius,
+            playersBoundaries[playerId].color,
+            0.1
+          )
+          .setName(`${playerId}-boundary`)
+          .setInteractive();
+
+        this.input.setDraggable(playerBoundary);
       }
     }
   }

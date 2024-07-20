@@ -12,6 +12,7 @@ type playersBoundariesType = {
     x: number;
     y: number;
     radius: number;
+    color: number;
     isVisible: boolean;
   };
 };
