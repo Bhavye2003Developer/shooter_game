@@ -1,6 +1,6 @@
 type playersType = {
   [id: string]: {
-    color: string;
+    color: number;
     x: number;
     y: number;
     radius: number;
