@@ -115,7 +115,7 @@ function App() {
 
             const mousePosX = mouseX - canvasPos[0];
             const mousePosY = mouseY - canvasPos[1];
-            console.log(mouseX, mouseY, mousePosX, mousePosY);
+            // console.log(mouseX, mouseY, mousePosX, mousePosY);
 
             const tmpPlayers = { ...players };
 
@@ -175,6 +175,7 @@ function App() {
           tmpPlayersBoundaries[activePlayerId.current].y =
             curPlayerInfo.current.y;
           tmpPlayersBoundaries[activePlayerId.current].isVisible = false;
+          activePlayerId.current = -1;
           setPlayersBoundaries(tmpPlayersBoundaries);
         }}
       />
