@@ -12,6 +12,8 @@ export default function Playground() {
     },
   });
 
+
+
   const [playersBoundaries, setPlayersBoundaries] =
     useState<playersBoundariesType>({
       player1: {
@@ -52,6 +54,11 @@ export default function Playground() {
         this.input.setDraggable(playerIcon);
         // console.log("circle", playerIcon);
 
+        const pl = this.add.graphics({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        });
+
         this.input.on(
           "drag",
           (
@@ -87,10 +94,6 @@ export default function Playground() {
             }
           }
         );
-
-        playerIcon.addListener("pointerdown", () => {
-          console.log("circle clicked: ", playerIcon.name);
-        });
       }
 
       for (let playerId of Object.keys(playersBoundaries)) {
