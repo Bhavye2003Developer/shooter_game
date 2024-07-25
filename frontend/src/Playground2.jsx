@@ -11,11 +11,7 @@ const Playground = () => {
   const boundaryRadius = 100;
   const playerRadius = 30;
   const isDraggingRef = useRef(false);
-  const isConnected = useRef(false);
-
   const playerId = useRef(null);
-
-  const arr = useRef([]);
 
   function addPlayer(x, y, color, playerId) {
     console.log("inside addPlayer: ", playerId);
@@ -26,6 +22,7 @@ const Playground = () => {
       new Phaser.Geom.Circle(0, 0, playerRadius),
       Phaser.Geom.Circle.Contains
     );
+    player.name = playerId;
 
     // Set draggable
     gameRef.current.scene.scenes[0].input.setDraggable(player);
@@ -40,22 +37,24 @@ const Playground = () => {
   }
 
   function toggleBoundary(player) {
-    const graphics = boundaryGraphicsRef.current;
+    if (player.name === playerId.current) {
+      const graphics = boundaryGraphicsRef.current;
 
-    if (!graphics || !player) return;
+      if (!graphics || !player) return;
 
-    if (boundaryVisibleRef.current) {
-      graphics.clear();
-      boundaryVisibleRef.current = false;
-    } else {
-      const playerX = player.x;
-      const playerY = player.y;
+      if (boundaryVisibleRef.current) {
+        graphics.clear();
+        boundaryVisibleRef.current = false;
+      } else {
+        const playerX = player.x;
+        const playerY = player.y;
 
-      boundaryCenterRef.current = { x: playerX, y: playerY };
+        boundaryCenterRef.current = { x: playerX, y: playerY };
 
-      graphics.lineStyle(3, 0xff0000);
-      graphics.strokeCircle(playerX, playerY, boundaryRadius);
-      boundaryVisibleRef.current = true;
+        graphics.lineStyle(3, 0xff0000);
+        graphics.strokeCircle(playerX, playerY, boundaryRadius);
+        boundaryVisibleRef.current = true;
+      }
     }
   }
 
@@ -79,11 +78,6 @@ const Playground = () => {
           color: 0x0000ff,
         })
       ); // player initial info
-      isConnected.current = true;
-      // Initialize players
-      // playersRef.current.push(
-      //   addPlayer(window.innerWidth / 2, window.innerHeight / 2, 0x0000ff)
-      // );
     };
 
     const config = {
@@ -118,50 +112,56 @@ const Playground = () => {
       });
 
       this.input.on("drag", (pointer, gameObject, dragX, dragY) => {
-        console.log(`Dragging: (${dragX}, ${dragY})`);
-        isDraggingRef.current = true;
-        if (!boundaryVisibleRef.current) {
-          toggleBoundary(gameObject);
-        }
-        const distance = Phaser.Math.Distance.Between(
-          boundaryCenterRef.current.x,
-          boundaryCenterRef.current.y,
-          dragX,
-          dragY
+        console.log(
+          `Dragging: (${dragX}, ${dragY}), ${gameObject.name}, ${playerId.current}`
         );
-        const maxDistance = boundaryRadius - playerRadius;
-        if (distance <= maxDistance) {
-          gameObject.setPosition(dragX, dragY);
-        } else {
-          const angle = Phaser.Math.Angle.Between(
+        if (gameObject.name == playerId.current) {
+          isDraggingRef.current = true;
+          if (!boundaryVisibleRef.current) {
+            toggleBoundary(gameObject);
+          }
+          const distance = Phaser.Math.Distance.Between(
             boundaryCenterRef.current.x,
             boundaryCenterRef.current.y,
             dragX,
             dragY
           );
-          const constrainedX =
-            boundaryCenterRef.current.x + maxDistance * Math.cos(angle);
-          const constrainedY =
-            boundaryCenterRef.current.y + maxDistance * Math.sin(angle);
-          gameObject.setPosition(constrainedX, constrainedY);
+          const maxDistance = boundaryRadius - playerRadius;
+          if (distance <= maxDistance) {
+            gameObject.setPosition(dragX, dragY);
+          } else {
+            const angle = Phaser.Math.Angle.Between(
+              boundaryCenterRef.current.x,
+              boundaryCenterRef.current.y,
+              dragX,
+              dragY
+            );
+            const constrainedX =
+              boundaryCenterRef.current.x + maxDistance * Math.cos(angle);
+            const constrainedY =
+              boundaryCenterRef.current.y + maxDistance * Math.sin(angle);
+            gameObject.setPosition(constrainedX, constrainedY);
+          }
         }
       });
 
       this.input.on("dragend", (pointer, gameObject) => {
-        console.log("Drag ended", gameObject.x, gameObject.y);
+        console.log("Drag ended", gameObject.x, gameObject.y, gameObject.name);
         gameObject.setAlpha(1);
-        if (isDraggingRef.current) {
-          clearBoundary();
-          isDraggingRef.current = false;
+        if (gameObject.name == playerId.current) {
+          if (isDraggingRef.current) {
+            clearBoundary();
+            isDraggingRef.current = false;
+          }
+          websocket.send(
+            JSON.stringify({
+              playerId: playerId.current,
+              status: "POSCHANGE",
+              x: gameObject.x,
+              y: gameObject.y,
+            })
+          );
         }
-        websocket.send(
-          JSON.stringify({
-            playerId: playerId.current,
-            status: "POSCHANGE",
-            x: gameObject.x,
-            y: gameObject.y,
-          })
-        );
       });
     }
 
