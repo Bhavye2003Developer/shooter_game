@@ -13,6 +13,13 @@ const Playground = () => {
   const isDraggingRef = useRef(false);
   const playerId = useRef(null);
 
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const selectedPlayerRef = useRef(null);
+
+  useEffect(() => {
+    selectedPlayerRef.current = selectedPlayer;
+  }, [selectedPlayer]);
+
   function addPlayer(x, y, color, playerId) {
     console.log("inside addPlayer: ", playerId);
     const player = gameRef.current.scene.scenes[0].add.graphics({ x, y });
@@ -35,6 +42,32 @@ const Playground = () => {
     });
     return player;
   }
+
+  // player.on("pointerdown", () => {
+  //   if (selectedPlayerRef.current === null) {
+  //     setSelectedPlayer(player);
+  //     console.log("Player selected");
+  //   } else {
+  //     if (selectedPlayerRef.current !== player) {
+  //       const distance = Phaser.Math.Distance.Between(
+  //         selectedPlayerRef.current.x,
+  //         selectedPlayerRef.current.y,
+  //         player.x,
+  //         player.y
+  //       );
+  //       if (distance <= boundaryRadius) {
+  //         deletePlayer(player);
+  //         console.log("Player deleted");
+  //       } else {
+  //         console.log("Player is not within the boundary");
+  //       }
+  //       // Reset selectedPlayer
+  //       setSelectedPlayer(null);
+  //     } else {
+  //       console.log("Cannot delete the selected player");
+  //     }
+  //   }
+  // });
 
   function toggleBoundary(player) {
     if (player.name === playerId.current) {
